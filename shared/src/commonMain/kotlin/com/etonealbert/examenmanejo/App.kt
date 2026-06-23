@@ -1,49 +1,187 @@
 package com.etonealbert.examenmanejo
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
-
-import examenmanejo.shared.generated.resources.Res
-import examenmanejo.shared.generated.resources.compose_multiplatform
+import com.etonealbert.examenmanejo.core.design.ExamenManejoTheme
+import com.etonealbert.examenmanejo.core.navigation.AppNavigator
+import com.etonealbert.examenmanejo.core.navigation.AppRoute
+import com.etonealbert.examenmanejo.core.navigation.RootCoordinator
+import com.etonealbert.examenmanejo.feature.exam.ExamScreen
+import com.etonealbert.examenmanejo.feature.exam.ExamUiEffect
+import com.etonealbert.examenmanejo.feature.exam.ExamViewModel
+import com.etonealbert.examenmanejo.feature.history.HistoryScreen
+import com.etonealbert.examenmanejo.feature.history.HistoryUiEffect
+import com.etonealbert.examenmanejo.feature.history.HistoryViewModel
+import com.etonealbert.examenmanejo.feature.home.HomeScreen
+import com.etonealbert.examenmanejo.feature.home.HomeUiEffect
+import com.etonealbert.examenmanejo.feature.home.HomeViewModel
+import com.etonealbert.examenmanejo.feature.onboarding.OnboardingScreen
+import com.etonealbert.examenmanejo.feature.onboarding.OnboardingUiEffect
+import com.etonealbert.examenmanejo.feature.onboarding.OnboardingViewModel
+import com.etonealbert.examenmanejo.feature.result.ResultScreen
+import com.etonealbert.examenmanejo.feature.result.ResultUiEffect
+import com.etonealbert.examenmanejo.feature.result.ResultViewModel
+import com.etonealbert.examenmanejo.feature.review.ReviewScreen
+import com.etonealbert.examenmanejo.feature.review.ReviewUiEffect
+import com.etonealbert.examenmanejo.feature.review.ReviewViewModel
+import com.etonealbert.examenmanejo.feature.settings.SettingsScreen
+import com.etonealbert.examenmanejo.feature.settings.SettingsUiEffect
+import com.etonealbert.examenmanejo.feature.settings.SettingsViewModel
+import com.etonealbert.examenmanejo.feature.study.StudyScreen
+import com.etonealbert.examenmanejo.feature.study.StudyUiEffect
+import com.etonealbert.examenmanejo.feature.study.StudyViewModel
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
+    val navigator = koinInject<AppNavigator>()
+    val rootCoordinator = koinInject<RootCoordinator>()
+    val route by navigator.currentRoute.collectAsState()
+
+    LaunchedEffect(rootCoordinator) {
+        rootCoordinator.start()
+    }
+
+    ExamenManejoTheme {
+        Surface(Modifier.fillMaxSize()) {
+            Box(Modifier.safeContentPadding().fillMaxSize()) {
+                AppRouteHost(route = route, navigator = navigator)
             }
         }
     }
+}
+
+@Composable
+private fun AppRouteHost(
+    route: AppRoute,
+    navigator: AppNavigator,
+) {
+    when (route) {
+        AppRoute.Onboarding -> {
+            val viewModel = koinViewModel<OnboardingViewModel>()
+            val state by viewModel.uiState.collectAsState()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        is OnboardingUiEffect.Navigate -> navigator.replace(effect.route)
+                    }
+                }
+            }
+            OnboardingScreen(state = state, onEvent = viewModel::onEvent)
+        }
+        AppRoute.Home -> {
+            val viewModel = koinViewModel<HomeViewModel>()
+            val state by viewModel.uiState.collectAsState()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        is HomeUiEffect.Navigate -> navigator.navigate(effect.route)
+                    }
+                }
+            }
+            HomeScreen(state = state, onEvent = viewModel::onEvent)
+        }
+        is AppRoute.Study -> {
+            val viewModel = koinViewModel<StudyViewModel>(
+                key = "study:${route.licenseClassId}",
+                parameters = { parametersOf(route.licenseClassId) },
+            )
+            val state by viewModel.uiState.collectAsState()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        is StudyUiEffect.Navigate -> navigator.navigate(effect.route)
+                    }
+                }
+            }
+            StudyScreen(state = state, onEvent = viewModel::onEvent)
+        }
+        is AppRoute.Exam -> {
+            val viewModel = koinViewModel<ExamViewModel>(
+                key = "exam:${route.licenseClassId}",
+                parameters = { parametersOf(route.licenseClassId) },
+            )
+            val state by viewModel.uiState.collectAsState()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        is ExamUiEffect.Navigate -> navigator.navigate(effect.route)
+                    }
+                }
+            }
+            ExamScreen(state = state, onEvent = viewModel::onEvent)
+        }
+        is AppRoute.Result -> {
+            val viewModel = koinViewModel<ResultViewModel>(
+                key = "result:${route.examSessionId}",
+                parameters = { parametersOf(route.examSessionId) },
+            )
+            val state by viewModel.uiState.collectAsState()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        is ResultUiEffect.Navigate -> navigator.navigate(effect.route)
+                    }
+                }
+            }
+            ResultScreen(state = state, onEvent = viewModel::onEvent)
+        }
+        is AppRoute.Review -> {
+            val viewModel = koinViewModel<ReviewViewModel>(
+                key = "review:${route.examSessionId}",
+                parameters = { parametersOf(route.examSessionId) },
+            )
+            val state by viewModel.uiState.collectAsState()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        is ReviewUiEffect.Navigate -> navigator.navigate(effect.route)
+                    }
+                }
+            }
+            ReviewScreen(state = state, onEvent = viewModel::onEvent)
+        }
+        AppRoute.History -> {
+            val viewModel = koinViewModel<HistoryViewModel>()
+            val state by viewModel.uiState.collectAsState()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        is HistoryUiEffect.Navigate -> navigator.navigate(effect.route)
+                    }
+                }
+            }
+            HistoryScreen(state = state, onEvent = viewModel::onEvent)
+        }
+        AppRoute.Settings -> {
+            val viewModel = koinViewModel<SettingsViewModel>()
+            val state by viewModel.uiState.collectAsState()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        is SettingsUiEffect.Navigate -> navigator.navigate(effect.route)
+                    }
+                }
+            }
+            SettingsScreen(state = state, onEvent = viewModel::onEvent)
+        }
+        is AppRoute.Paywall -> UnsupportedMvpRoute("Suscripcion no disponible en el MVP offline.")
+        is AppRoute.Legal -> UnsupportedMvpRoute("Documento legal no disponible en este MVP.")
+        is AppRoute.Tutorial -> UnsupportedMvpRoute("Tutorial no disponible en este MVP.")
+    }
+}
+
+@Composable
+private fun UnsupportedMvpRoute(message: String) {
+    Text(message)
 }
