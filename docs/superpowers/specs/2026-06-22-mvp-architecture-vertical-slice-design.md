@@ -158,15 +158,34 @@ study_progress
 user_settings
 ```
 
+Onboarding and MVP app state persist in `user_settings`; do not add DataStore for this MVP. Required settings include:
+
+```text
+has_completed_onboarding
+selected_jurisdiction
+seed_import_version
+```
+
 Import requirements:
 
 - Seed import is idempotent.
 - Idempotency uses `question_pack_id`, version, and hash.
 - Import writes source metadata, jurisdictions, license classes/subclasses, categories, questions, options, and mappings in one transaction.
 - Import never deletes user progress or history.
+- If import fails, return a clear `ImportResult.Failed(reason)` and do not mark the pack as imported.
 - Demo content is clearly marked as demo and unverified.
 - Every question has source, jurisdiction, content status, review status, and version metadata from day one.
 - Future Ktor API interfaces can exist, but Koin binds fake/local implementations for MVP.
+
+Use this import result contract:
+
+```kotlin
+sealed interface ImportResult {
+    data object AlreadyImported : ImportResult
+    data class Imported(val questionCount: Int) : ImportResult
+    data class Failed(val reason: String) : ImportResult
+}
+```
 
 Exam snapshot requirements:
 
@@ -206,6 +225,7 @@ Functional requirements:
 - `CheckFirstLaunchSeedImportUseCase` runs before or during root app startup.
 - `RootCoordinator` performs seed import check, onboarding status check, then routes to `Onboarding` or `Home`.
 - `HomeViewModel` loads license classes and exposes Class B.
+- `ExamConfig` defines exam rules instead of hardcoding them in exam use cases.
 - `StartExamUseCase` selects active Class B questions from local storage and creates an exam session plus question snapshots.
 - `SubmitExamAnswerUseCase` writes or updates `exam_session_answer`.
 - `FinishExamUseCase` calculates deterministic result and completes the session.
@@ -288,12 +308,17 @@ Create each meaningful domain model in its own file:
 - `LicenseClass`
 - `LicenseSubclass`
 - `Jurisdiction`
+- `ExamConfig`
 - `Question`
 - `AnswerOption`
 - `QuestionCategory`
 - `QuestionSource`
 - `QuestionStatus`
+- `ContentStatus`
+- `ReviewStatus`
 - `ExamSession`
+- `ExamQuestionSnapshot`
+- `ExamOptionSnapshot`
 - `ExamAnswer`
 - `ExamResult`
 - `UserStats`
@@ -329,6 +354,19 @@ Create each use case in its own file:
 - `GetUserStatsUseCase`
 - `ImportSeedQuestionsUseCase`
 - `CheckFirstLaunchSeedImportUseCase`
+
+MVP exam config:
+
+```kotlin
+data class ExamConfig(
+    val licenseClassId: String,
+    val questionCount: Int,
+    val passingPercentage: Int,
+    val timeLimitMinutes: Int?,
+)
+```
+
+For the Class B demo exam, use the small demo pack count, `passingPercentage = 70`, and `timeLimitMinutes = null`, documenting these as placeholder values until verified jurisdiction rules replace demo content.
 
 ## Dependency Injection And Network Placeholders
 
