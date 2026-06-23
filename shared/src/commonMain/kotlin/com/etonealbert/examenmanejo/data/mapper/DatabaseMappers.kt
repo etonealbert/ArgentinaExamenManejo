@@ -1,10 +1,12 @@
 package com.etonealbert.examenmanejo.data.mapper
 
+import com.etonealbert.examenmanejo.db.Content_source
 import com.etonealbert.examenmanejo.db.Exam_session
 import com.etonealbert.examenmanejo.db.Exam_session_answer
 import com.etonealbert.examenmanejo.db.Exam_session_question_snapshot
 import com.etonealbert.examenmanejo.db.License_class
 import com.etonealbert.examenmanejo.db.Question as QuestionRow
+import com.etonealbert.examenmanejo.db.Question_category
 import com.etonealbert.examenmanejo.db.Question_option
 import com.etonealbert.examenmanejo.domain.model.AnswerOption
 import com.etonealbert.examenmanejo.domain.model.ContentStatus
@@ -46,12 +48,30 @@ fun Question_option.toDomain(): AnswerOption = AnswerOption(
     position = position.toInt(),
 )
 
-fun QuestionRow.toDomain(options: List<Question_option>, licenseClassIds: List<String>): Question = Question(
+fun Question_category.toDomain(): QuestionCategory = QuestionCategory(
+    id = category_id,
+    displayName = display_name,
+)
+
+fun Content_source.toDomain(): QuestionSource = QuestionSource(
+    id = source_id,
+    title = title,
+    url = url,
+    accessedAt = accessed_at,
+    attribution = attribution,
+)
+
+fun QuestionRow.toDomain(
+    options: List<Question_option>,
+    category: Question_category,
+    source: Content_source,
+    licenseClassIds: List<String>,
+): Question = Question(
     id = question_id,
     licenseClassIds = licenseClassIds,
     jurisdictionId = jurisdiction_id,
-    category = QuestionCategory(id = category_id, displayName = category_id),
-    source = QuestionSource(id = source_id, title = source_id, url = "", accessedAt = "", attribution = ""),
+    category = category.toDomain(),
+    source = source.toDomain(),
     text = text,
     explanation = explanation,
     options = options.map { it.toDomain() },

@@ -148,5 +148,11 @@ JOIN question_license_class qlc ON q.question_id = qlc.question_id
 WHERE qlc.license_class_id = ? AND q.question_status = 'ACTIVE'
 ORDER BY q.question_id;
 
+selectQuestionCategory:
+SELECT * FROM question_category WHERE category_id = ?;
+
+selectContentSource:
+SELECT * FROM content_source WHERE source_id = ?;
+
 selectQuestionOptions:
 SELECT * FROM question_option WHERE question_id = ? ORDER BY position;

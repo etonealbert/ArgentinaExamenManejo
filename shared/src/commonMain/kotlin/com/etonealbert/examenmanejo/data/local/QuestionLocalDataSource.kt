@@ -12,6 +12,13 @@ class QuestionLocalDataSource(
         .executeAsList()
         .map { row ->
             val options = database.contentQueries.selectQuestionOptions(row.question_id).executeAsList()
-            row.toDomain(options = options, licenseClassIds = listOf(licenseClassId))
+            val category = database.contentQueries.selectQuestionCategory(row.category_id).executeAsOne()
+            val source = database.contentQueries.selectContentSource(row.source_id).executeAsOne()
+            row.toDomain(
+                options = options,
+                category = category,
+                source = source,
+                licenseClassIds = listOf(licenseClassId),
+            )
         }
 }

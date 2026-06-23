@@ -52,3 +52,13 @@ status: DONE_WITH_CONCERNS
 - `StatsRepositoryImpl` computes MVP stats from completed exam history only: completed exam count and integer average score percentage.
 - `FakeSubscriptionRepository` returns no premium access with source `MVP_FAKE`, keeping the MVP offline and subscription-free.
 - The requested `:shared:compileKotlinMetadata` task reports success but is skipped by Gradle in this checkout. `:shared:compileCommonMainKotlinMetadata --rerun-tasks` was run to verify the new common source files compile.
+
+## Fix After Review
+
+- Fixed `QuestionLocalDataSource.getQuestionsByLicenseClass()` to load the persisted `question_category` and `content_source` rows for each selected question, then pass that content metadata into `DatabaseMappers.kt`.
+- Added minimal SQLDelight read queries in `Content.sq` for selecting category and source rows by id; no table schema changes were made.
+- Updated question mapping so domain `Question.category.displayName` and `Question.source` metadata come from imported local content data, which makes exam snapshots use the imported human-readable category display name.
+- Added a mapper regression test covering imported category/source metadata and exam snapshot category text.
+- Red check: `.\gradlew.bat :shared:testAndroidHostTest --rerun-tasks` failed before implementation with missing `category` and `source` mapper parameters.
+- Test compile check after fix: `.\gradlew.bat :shared:compileAndroidHostTest --rerun-tasks` result: `BUILD SUCCESSFUL in 9s`; existing warnings only.
+- Requested verification: `.\gradlew.bat :shared:compileCommonMainKotlinMetadata --rerun-tasks` result: `BUILD SUCCESSFUL in 4s`; existing `expect`/`actual` beta warning only in `DriverFactory.kt`.
