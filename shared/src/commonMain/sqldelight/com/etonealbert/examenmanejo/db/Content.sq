@@ -1,0 +1,152 @@
+CREATE TABLE question_pack (
+  pack_id TEXT NOT NULL,
+  version INTEGER NOT NULL,
+  hash TEXT NOT NULL,
+  title TEXT NOT NULL,
+  installed_at_epoch_ms INTEGER,
+  PRIMARY KEY(pack_id, version)
+);
+
+CREATE TABLE content_source (
+  source_id TEXT NOT NULL PRIMARY KEY,
+  title TEXT NOT NULL,
+  url TEXT NOT NULL,
+  accessed_at TEXT NOT NULL,
+  attribution TEXT NOT NULL
+);
+
+CREATE TABLE jurisdiction (
+  jurisdiction_id TEXT NOT NULL PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  level TEXT NOT NULL
+);
+
+CREATE TABLE license_class (
+  license_class_id TEXT NOT NULL PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  is_enabled INTEGER NOT NULL
+);
+
+CREATE TABLE license_subclass (
+  subclass_id TEXT NOT NULL PRIMARY KEY,
+  license_class_id TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  FOREIGN KEY(license_class_id) REFERENCES license_class(license_class_id)
+);
+
+CREATE TABLE question_category (
+  category_id TEXT NOT NULL PRIMARY KEY,
+  display_name TEXT NOT NULL
+);
+
+CREATE TABLE question (
+  question_id TEXT NOT NULL PRIMARY KEY,
+  pack_id TEXT NOT NULL,
+  jurisdiction_id TEXT NOT NULL,
+  category_id TEXT NOT NULL,
+  source_id TEXT NOT NULL,
+  text TEXT NOT NULL,
+  explanation TEXT NOT NULL,
+  content_status TEXT NOT NULL,
+  review_status TEXT NOT NULL,
+  question_status TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  FOREIGN KEY(jurisdiction_id) REFERENCES jurisdiction(jurisdiction_id),
+  FOREIGN KEY(category_id) REFERENCES question_category(category_id),
+  FOREIGN KEY(source_id) REFERENCES content_source(source_id)
+);
+
+CREATE TABLE question_license_class (
+  question_id TEXT NOT NULL,
+  license_class_id TEXT NOT NULL,
+  PRIMARY KEY(question_id, license_class_id),
+  FOREIGN KEY(question_id) REFERENCES question(question_id),
+  FOREIGN KEY(license_class_id) REFERENCES license_class(license_class_id)
+);
+
+CREATE TABLE question_option (
+  option_id TEXT NOT NULL PRIMARY KEY,
+  question_id TEXT NOT NULL,
+  text TEXT NOT NULL,
+  is_correct INTEGER NOT NULL,
+  position INTEGER NOT NULL,
+  FOREIGN KEY(question_id) REFERENCES question(question_id)
+);
+
+CREATE TABLE import_log (
+  import_log_id TEXT NOT NULL PRIMARY KEY,
+  pack_id TEXT NOT NULL,
+  version INTEGER NOT NULL,
+  started_at_epoch_ms INTEGER NOT NULL,
+  finished_at_epoch_ms INTEGER,
+  status TEXT NOT NULL,
+  message TEXT NOT NULL
+);
+
+selectQuestionPack:
+SELECT * FROM question_pack WHERE pack_id = ? AND version = ?;
+
+insertQuestionPack:
+INSERT OR REPLACE INTO question_pack(pack_id, version, hash, title, installed_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?);
+
+upsertContentSource:
+INSERT OR REPLACE INTO content_source(source_id, title, url, accessed_at, attribution)
+VALUES (?, ?, ?, ?, ?);
+
+upsertJurisdiction:
+INSERT OR REPLACE INTO jurisdiction(jurisdiction_id, display_name, level)
+VALUES (?, ?, ?);
+
+upsertLicenseClass:
+INSERT OR REPLACE INTO license_class(license_class_id, display_name, description, is_enabled)
+VALUES (?, ?, ?, ?);
+
+upsertLicenseSubclass:
+INSERT OR REPLACE INTO license_subclass(subclass_id, license_class_id, display_name, description)
+VALUES (?, ?, ?, ?);
+
+upsertQuestionCategory:
+INSERT OR REPLACE INTO question_category(category_id, display_name)
+VALUES (?, ?);
+
+upsertQuestion:
+INSERT OR REPLACE INTO question(
+  question_id, pack_id, jurisdiction_id, category_id, source_id, text, explanation,
+  content_status, review_status, question_status, content_hash
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteQuestionLicenseClasses:
+DELETE FROM question_license_class WHERE question_id = ?;
+
+insertQuestionLicenseClass:
+INSERT OR IGNORE INTO question_license_class(question_id, license_class_id)
+VALUES (?, ?);
+
+deleteQuestionOptions:
+DELETE FROM question_option WHERE question_id = ?;
+
+upsertQuestionOption:
+INSERT OR REPLACE INTO question_option(option_id, question_id, text, is_correct, position)
+VALUES (?, ?, ?, ?, ?);
+
+insertImportLog:
+INSERT INTO import_log(import_log_id, pack_id, version, started_at_epoch_ms, finished_at_epoch_ms, status, message)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+finishImportLog:
+UPDATE import_log SET finished_at_epoch_ms = ?, status = ?, message = ? WHERE import_log_id = ?;
+
+selectAllLicenseClasses:
+SELECT * FROM license_class ORDER BY license_class_id;
+
+selectQuestionsByLicenseClass:
+SELECT DISTINCT q.* FROM question q
+JOIN question_license_class qlc ON q.question_id = qlc.question_id
+WHERE qlc.license_class_id = ? AND q.question_status = 'ACTIVE'
+ORDER BY q.question_id;
+
+selectQuestionOptions:
+SELECT * FROM question_option WHERE question_id = ? ORDER BY position;

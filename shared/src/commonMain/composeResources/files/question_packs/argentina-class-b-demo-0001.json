@@ -1,0 +1,141 @@
+{
+  "packId": "argentina-class-b-demo",
+  "version": 1,
+  "hash": "sha256-dev-replace-with-file-hash",
+  "title": "Preguntas demo Clase B",
+  "sources": [
+    {
+      "id": "demo-source",
+      "title": "Contenido demo no oficial",
+      "url": "local-demo",
+      "accessedAt": "2026-06-22",
+      "attribution": "Contenido original demo para validar el flujo; no es material oficial."
+    }
+  ],
+  "jurisdictions": [
+    {
+      "id": "AR-DEMO",
+      "displayName": "Argentina demo",
+      "level": "demo"
+    }
+  ],
+  "licenseClasses": [
+    {
+      "id": "B",
+      "displayName": "Clase B",
+      "description": "Autos particulares; contenido demo para MVP",
+      "isEnabled": true
+    }
+  ],
+  "categories": [
+    {
+      "id": "traffic_rules",
+      "displayName": "Reglas de transito"
+    },
+    {
+      "id": "road_safety",
+      "displayName": "Seguridad vial"
+    }
+  ],
+  "questions": [
+    {
+      "id": "AR-DEMO-B-000001",
+      "licenseClassIds": ["B"],
+      "jurisdictionId": "AR-DEMO",
+      "categoryId": "traffic_rules",
+      "sourceId": "demo-source",
+      "text": "Contenido demo: en una interseccion sin senales, que conducta es mas segura?",
+      "explanation": "Esta pregunta es demo no oficial y no reemplaza material oficial. La conducta segura es reducir la velocidad y ceder el paso segun la prioridad aplicable.",
+      "contentStatus": "DEMO_UNVERIFIED",
+      "reviewStatus": "APPROVED",
+      "questionStatus": "ACTIVE",
+      "contentHash": "demo-b-001",
+      "options": [
+        {
+          "id": "AR-DEMO-B-000001-A",
+          "text": "Reducir la velocidad y verificar la prioridad antes de avanzar.",
+          "isCorrect": true,
+          "position": 0
+        },
+        {
+          "id": "AR-DEMO-B-000001-B",
+          "text": "Acelerar para cruzar antes que otros vehiculos.",
+          "isCorrect": false,
+          "position": 1
+        },
+        {
+          "id": "AR-DEMO-B-000001-C",
+          "text": "Ignorar la prioridad si no hay semaforo.",
+          "isCorrect": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "id": "AR-DEMO-B-000002",
+      "licenseClassIds": ["B"],
+      "jurisdictionId": "AR-DEMO",
+      "categoryId": "road_safety",
+      "sourceId": "demo-source",
+      "text": "Contenido demo: antes de iniciar un viaje, que elemento basico conviene revisar?",
+      "explanation": "Esta pregunta es demo no oficial. Revisar neumaticos, luces y documentacion ayuda a prevenir riesgos basicos.",
+      "contentStatus": "DEMO_UNVERIFIED",
+      "reviewStatus": "APPROVED",
+      "questionStatus": "ACTIVE",
+      "contentHash": "demo-b-002",
+      "options": [
+        {
+          "id": "AR-DEMO-B-000002-A",
+          "text": "Neumaticos, luces y documentacion del vehiculo.",
+          "isCorrect": true,
+          "position": 0
+        },
+        {
+          "id": "AR-DEMO-B-000002-B",
+          "text": "Solo el color del vehiculo.",
+          "isCorrect": false,
+          "position": 1
+        },
+        {
+          "id": "AR-DEMO-B-000002-C",
+          "text": "Solo el volumen de la radio.",
+          "isCorrect": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "id": "AR-DEMO-B-000003",
+      "licenseClassIds": ["B"],
+      "jurisdictionId": "AR-DEMO",
+      "categoryId": "traffic_rules",
+      "sourceId": "demo-source",
+      "text": "Contenido demo: si una senal vial indica detenerse, que debe hacer el conductor?",
+      "explanation": "Esta pregunta es demo no oficial. Una senal de detencion exige detener el vehiculo y comprobar que sea seguro continuar.",
+      "contentStatus": "DEMO_UNVERIFIED",
+      "reviewStatus": "APPROVED",
+      "questionStatus": "ACTIVE",
+      "contentHash": "demo-b-003",
+      "options": [
+        {
+          "id": "AR-DEMO-B-000003-A",
+          "text": "Detenerse y continuar solo cuando sea seguro.",
+          "isCorrect": true,
+          "position": 0
+        },
+        {
+          "id": "AR-DEMO-B-000003-B",
+          "text": "Continuar sin detenerse si no hay otros autos.",
+          "isCorrect": false,
+          "position": 1
+        },
+        {
+          "id": "AR-DEMO-B-000003-C",
+          "text": "Tocar bocina y avanzar.",
+          "isCorrect": false,
+          "position": 2
+        }
+      ]
+    }
+  ]
+}

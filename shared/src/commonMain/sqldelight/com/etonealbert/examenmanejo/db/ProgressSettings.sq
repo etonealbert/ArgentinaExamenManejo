@@ -1,0 +1,30 @@
+CREATE TABLE study_progress (
+  question_id TEXT NOT NULL PRIMARY KEY,
+  seen_count INTEGER NOT NULL,
+  correct_count INTEGER NOT NULL,
+  incorrect_count INTEGER NOT NULL,
+  updated_at_epoch_ms INTEGER NOT NULL
+);
+
+CREATE TABLE user_settings (
+  setting_key TEXT NOT NULL PRIMARY KEY,
+  setting_value TEXT NOT NULL,
+  updated_at_epoch_ms INTEGER NOT NULL
+);
+
+upsertStudyProgress:
+INSERT OR REPLACE INTO study_progress(question_id, seen_count, correct_count, incorrect_count, updated_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?);
+
+selectStudyProgress:
+SELECT * FROM study_progress WHERE question_id = ?;
+
+upsertUserSetting:
+INSERT OR REPLACE INTO user_settings(setting_key, setting_value, updated_at_epoch_ms)
+VALUES (?, ?, ?);
+
+selectUserSetting:
+SELECT * FROM user_settings WHERE setting_key = ?;
+
+selectAllUserSettings:
+SELECT * FROM user_settings ORDER BY setting_key;

@@ -1,0 +1,69 @@
+CREATE TABLE exam_session (
+  session_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  license_class_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  question_count INTEGER NOT NULL,
+  passing_percentage INTEGER NOT NULL,
+  started_at_epoch_ms INTEGER NOT NULL,
+  completed_at_epoch_ms INTEGER,
+  score_percentage INTEGER,
+  passed INTEGER
+);
+
+CREATE TABLE exam_session_question_snapshot (
+  session_id INTEGER NOT NULL,
+  question_id TEXT NOT NULL,
+  question_order INTEGER NOT NULL,
+  question_text_snapshot TEXT NOT NULL,
+  category_snapshot TEXT NOT NULL,
+  explanation_snapshot TEXT NOT NULL,
+  options_snapshot_json TEXT NOT NULL,
+  correct_option_id_snapshot TEXT NOT NULL,
+  PRIMARY KEY(session_id, question_id),
+  FOREIGN KEY(session_id) REFERENCES exam_session(session_id)
+);
+
+CREATE TABLE exam_session_answer (
+  session_id INTEGER NOT NULL,
+  question_id TEXT NOT NULL,
+  selected_option_id_snapshot TEXT,
+  answered_at_epoch_ms INTEGER NOT NULL,
+  PRIMARY KEY(session_id, question_id),
+  FOREIGN KEY(session_id) REFERENCES exam_session(session_id)
+);
+
+insertExamSession:
+INSERT INTO exam_session(
+  license_class_id, status, question_count, passing_percentage, started_at_epoch_ms,
+  completed_at_epoch_ms, score_percentage, passed
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+lastInsertedSessionId:
+SELECT last_insert_rowid();
+
+insertQuestionSnapshot:
+INSERT INTO exam_session_question_snapshot(
+  session_id, question_id, question_order, question_text_snapshot, category_snapshot,
+  explanation_snapshot, options_snapshot_json, correct_option_id_snapshot
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+upsertExamAnswer:
+INSERT OR REPLACE INTO exam_session_answer(session_id, question_id, selected_option_id_snapshot, answered_at_epoch_ms)
+VALUES (?, ?, ?, ?);
+
+selectExamSession:
+SELECT * FROM exam_session WHERE session_id = ?;
+
+selectQuestionSnapshots:
+SELECT * FROM exam_session_question_snapshot WHERE session_id = ? ORDER BY question_order;
+
+selectExamAnswers:
+SELECT * FROM exam_session_answer WHERE session_id = ?;
+
+completeExamSession:
+UPDATE exam_session
+SET status = 'COMPLETED', completed_at_epoch_ms = ?, score_percentage = ?, passed = ?
+WHERE session_id = ?;
+
+selectCompletedExamHistory:
+SELECT * FROM exam_session WHERE status = 'COMPLETED' ORDER BY completed_at_epoch_ms DESC;

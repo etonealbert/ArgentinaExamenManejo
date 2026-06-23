@@ -8,3 +8,5 @@ Baseline:
 
 Task 1: complete (no commit; review clean)
 Task 2: complete (no commit; review clean; host tests blocked by pre-existing `VS` main-class issue, metadata compile clean)
+Task 3: complete (no commit; review clean)
+Task 4: complete (no commit; review clean; host tests blocked by pre-existing `VS` issue, compileAndroidHostTest clean)
