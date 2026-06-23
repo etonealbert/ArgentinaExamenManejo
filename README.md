@@ -17,15 +17,17 @@ This is a Kotlin Multiplatform project targeting Android, iOS.
 Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and
 options:
 
-- Android app: `./gradlew :androidApp:assembleDebug`
+- Android app on Windows: `./gradlew.bat :androidApp:assembleDebug`
+- Android app on macOS/Linux: `./gradlew :androidApp:assembleDebug`
 - iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
 
 ### Running tests
 
 Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+- Shared metadata compile on Windows: `./gradlew.bat :shared:compileKotlinMetadata`
+- Android host tests on Windows: `./gradlew.bat :shared:testAndroidHostTest`
+- iOS simulator tests: `./gradlew :shared:iosSimulatorArm64Test` on macOS only. Simulator tests require macOS and are not run on Windows.
 
 ---
 

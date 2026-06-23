@@ -1,6 +1,6 @@
 package com.etonealbert.examenmanejo.domain.usecase
 
-import com.etonealbert.examenmanejo.data.local.seed.ImportResult
+import com.etonealbert.examenmanejo.domain.model.ImportResult
 import com.etonealbert.examenmanejo.domain.repository.QuestionPackRepository
 
 class ImportSeedQuestionsUseCase(

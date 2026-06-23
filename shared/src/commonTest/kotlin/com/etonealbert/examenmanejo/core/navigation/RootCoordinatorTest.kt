@@ -1,6 +1,6 @@
 package com.etonealbert.examenmanejo.core.navigation
 
-import com.etonealbert.examenmanejo.data.local.seed.ImportResult
+import com.etonealbert.examenmanejo.domain.model.ImportResult
 import com.etonealbert.examenmanejo.domain.repository.QuestionPackRepository
 import com.etonealbert.examenmanejo.domain.repository.SettingsRepository
 import com.etonealbert.examenmanejo.domain.usecase.CheckFirstLaunchSeedImportUseCase
@@ -10,6 +10,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class RootCoordinatorTest {
     @Test
@@ -44,24 +45,50 @@ class RootCoordinatorTest {
         assertEquals(AppRoute.Home, navigator.currentRoute.value)
     }
 
+    @Test
+    fun startRoutesToStartupErrorWhenSeedImportFails() = runSuspend {
+        val questionPackRepository = FakeQuestionPackRepository(ImportResult.Failed("checksum mismatch"))
+        val settingsRepository = FakeSettingsRepository(hasCompletedOnboarding = true)
+        val navigator = InMemoryAppNavigator(initialRoute = AppRoute.Onboarding)
+
+        val selectedRoute = RootCoordinator(
+            navigator = navigator,
+            checkFirstLaunchSeedImport = checkFirstLaunchSeedImportUseCase(questionPackRepository),
+            settingsRepository = settingsRepository,
+        ).start()
+
+        assertEquals(1, questionPackRepository.importAttempts)
+        assertFalse(settingsRepository.hasCompletedOnboardingWasCalled)
+        assertEquals(AppRoute.StartupError, selectedRoute)
+        assertEquals(AppRoute.StartupError, navigator.currentRoute.value)
+    }
+
     private fun checkFirstLaunchSeedImportUseCase(
         questionPackRepository: QuestionPackRepository,
     ) = CheckFirstLaunchSeedImportUseCase(ImportSeedQuestionsUseCase(questionPackRepository))
 
-    private class FakeQuestionPackRepository : QuestionPackRepository {
+    private class FakeQuestionPackRepository(
+        private val result: ImportResult = ImportResult.AlreadyImported,
+    ) : QuestionPackRepository {
         var importAttempts = 0
             private set
 
         override suspend fun importBundledSeedIfNeeded(): ImportResult {
             importAttempts += 1
-            return ImportResult.AlreadyImported
+            return result
         }
     }
 
     private class FakeSettingsRepository(
         private val hasCompletedOnboarding: Boolean,
     ) : SettingsRepository {
-        override suspend fun hasCompletedOnboarding(): Boolean = hasCompletedOnboarding
+        var hasCompletedOnboardingWasCalled = false
+            private set
+
+        override suspend fun hasCompletedOnboarding(): Boolean {
+            hasCompletedOnboardingWasCalled = true
+            return hasCompletedOnboarding
+        }
 
         override suspend fun setOnboardingCompleted(completed: Boolean) = error("Not used")
 

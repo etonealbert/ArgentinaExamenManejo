@@ -3,6 +3,7 @@ package com.etonealbert.examenmanejo.core.navigation
 sealed interface AppRoute {
     data object Onboarding : AppRoute
     data object Home : AppRoute
+    data object StartupError : AppRoute
     data class Study(val licenseClassId: String) : AppRoute
     data class Exam(val licenseClassId: String) : AppRoute
     data class Result(val examSessionId: Long) : AppRoute

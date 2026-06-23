@@ -6,10 +6,14 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import com.etonealbert.examenmanejo.core.design.ExamenManejoTheme
 import com.etonealbert.examenmanejo.core.navigation.AppNavigator
 import com.etonealbert.examenmanejo.core.navigation.AppRoute
@@ -66,9 +70,11 @@ private fun AppRouteHost(
     route: AppRoute,
     navigator: AppNavigator,
 ) {
+    val routeViewModelStoreOwner = rememberRouteViewModelStoreOwner(route)
+
     when (route) {
         AppRoute.Onboarding -> {
-            val viewModel = koinViewModel<OnboardingViewModel>()
+            val viewModel = koinViewModel<OnboardingViewModel>(viewModelStoreOwner = routeViewModelStoreOwner)
             val state by viewModel.uiState.collectAsState()
             LaunchedEffect(viewModel) {
                 viewModel.effects.collect { effect ->
@@ -80,7 +86,7 @@ private fun AppRouteHost(
             OnboardingScreen(state = state, onEvent = viewModel::onEvent)
         }
         AppRoute.Home -> {
-            val viewModel = koinViewModel<HomeViewModel>()
+            val viewModel = koinViewModel<HomeViewModel>(viewModelStoreOwner = routeViewModelStoreOwner)
             val state by viewModel.uiState.collectAsState()
             LaunchedEffect(viewModel) {
                 viewModel.effects.collect { effect ->
@@ -93,7 +99,7 @@ private fun AppRouteHost(
         }
         is AppRoute.Study -> {
             val viewModel = koinViewModel<StudyViewModel>(
-                key = "study:${route.licenseClassId}",
+                viewModelStoreOwner = routeViewModelStoreOwner,
                 parameters = { parametersOf(route.licenseClassId) },
             )
             val state by viewModel.uiState.collectAsState()
@@ -108,7 +114,7 @@ private fun AppRouteHost(
         }
         is AppRoute.Exam -> {
             val viewModel = koinViewModel<ExamViewModel>(
-                key = "exam:${route.licenseClassId}",
+                viewModelStoreOwner = routeViewModelStoreOwner,
                 parameters = { parametersOf(route.licenseClassId) },
             )
             val state by viewModel.uiState.collectAsState()
@@ -123,7 +129,7 @@ private fun AppRouteHost(
         }
         is AppRoute.Result -> {
             val viewModel = koinViewModel<ResultViewModel>(
-                key = "result:${route.examSessionId}",
+                viewModelStoreOwner = routeViewModelStoreOwner,
                 parameters = { parametersOf(route.examSessionId) },
             )
             val state by viewModel.uiState.collectAsState()
@@ -138,7 +144,7 @@ private fun AppRouteHost(
         }
         is AppRoute.Review -> {
             val viewModel = koinViewModel<ReviewViewModel>(
-                key = "review:${route.examSessionId}",
+                viewModelStoreOwner = routeViewModelStoreOwner,
                 parameters = { parametersOf(route.examSessionId) },
             )
             val state by viewModel.uiState.collectAsState()
@@ -152,7 +158,7 @@ private fun AppRouteHost(
             ReviewScreen(state = state, onEvent = viewModel::onEvent)
         }
         AppRoute.History -> {
-            val viewModel = koinViewModel<HistoryViewModel>()
+            val viewModel = koinViewModel<HistoryViewModel>(viewModelStoreOwner = routeViewModelStoreOwner)
             val state by viewModel.uiState.collectAsState()
             LaunchedEffect(viewModel) {
                 viewModel.effects.collect { effect ->
@@ -163,8 +169,9 @@ private fun AppRouteHost(
             }
             HistoryScreen(state = state, onEvent = viewModel::onEvent)
         }
+        AppRoute.StartupError -> UnsupportedMvpRoute("No se pudo cargar el contenido inicial. Reinicia la app e intenta nuevamente.")
         AppRoute.Settings -> {
-            val viewModel = koinViewModel<SettingsViewModel>()
+            val viewModel = koinViewModel<SettingsViewModel>(viewModelStoreOwner = routeViewModelStoreOwner)
             val state by viewModel.uiState.collectAsState()
             LaunchedEffect(viewModel) {
                 viewModel.effects.collect { effect ->
@@ -184,4 +191,17 @@ private fun AppRouteHost(
 @Composable
 private fun UnsupportedMvpRoute(message: String) {
     Text(message)
+}
+
+@Composable
+private fun rememberRouteViewModelStoreOwner(route: AppRoute): ViewModelStoreOwner {
+    val owner = remember(route) { RouteViewModelStoreOwner() }
+    DisposableEffect(owner) {
+        onDispose { owner.viewModelStore.clear() }
+    }
+    return owner
+}
+
+private class RouteViewModelStoreOwner : ViewModelStoreOwner {
+    override val viewModelStore: ViewModelStore = ViewModelStore()
 }

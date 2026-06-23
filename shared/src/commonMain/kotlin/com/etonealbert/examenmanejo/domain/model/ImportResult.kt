@@ -1,4 +1,4 @@
-package com.etonealbert.examenmanejo.data.local.seed
+package com.etonealbert.examenmanejo.domain.model
 
 sealed interface ImportResult {
     data object AlreadyImported : ImportResult

@@ -7,6 +7,7 @@ import com.etonealbert.examenmanejo.domain.usecase.FinishExamUseCase
 import com.etonealbert.examenmanejo.domain.usecase.GetReviewAnswersUseCase
 import com.etonealbert.examenmanejo.domain.usecase.StartExamUseCase
 import com.etonealbert.examenmanejo.domain.usecase.SubmitExamAnswerUseCase
+import com.etonealbert.examenmanejo.domain.usecase.CLASS_B_DEMO_QUESTION_COUNT
 import com.etonealbert.examenmanejo.domain.usecase.classBDemoExamConfig
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +28,7 @@ class ExamViewModel(
     private val getReviewAnswers: GetReviewAnswersUseCase,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
 ) : ViewModel() {
-    private val config = classBDemoExamConfig(questionCount = 10).copy(licenseClassId = licenseClassId)
+    private val config = classBDemoExamConfig(questionCount = CLASS_B_DEMO_QUESTION_COUNT).copy(licenseClassId = licenseClassId)
     private val _uiState = MutableStateFlow(ExamUiState(licenseClassId = licenseClassId))
     val uiState: StateFlow<ExamUiState> = _uiState.asStateFlow()
 

@@ -53,6 +53,22 @@ class ExamViewModelTest {
         assertNoReplayedEffect(viewModel.effects)
     }
 
+    @Test
+    fun startsMvpDemoExamWithAvailableDemoQuestionCount() {
+        val examRepository = FakeExamRepository()
+
+        ExamViewModel(
+            licenseClassId = "B",
+            startExam = StartExamUseCase(FakeQuestionRepository(), examRepository, FixedClock()),
+            submitExamAnswer = SubmitExamAnswerUseCase(examRepository, FixedClock()),
+            finishExam = FinishExamUseCase(examRepository, CalculateExamResultUseCase(), FixedClock()),
+            getReviewAnswers = GetReviewAnswersUseCase(examRepository),
+            dispatcher = Dispatchers.Unconfined,
+        )
+
+        assertEquals(3, examRepository.startedConfig?.questionCount)
+    }
+
     private class FixedClock : Clock {
         override fun nowEpochMillis(): Long = 123L
     }
@@ -81,6 +97,8 @@ class ExamViewModelTest {
     private class FakeExamRepository : ExamRepository {
         val answers = mutableListOf<ExamAnswer>()
         var completedResult: ExamResult? = null
+        var startedConfig: ExamConfig? = null
+            private set
         private val snapshots = mutableListOf<ExamQuestionSnapshot>()
 
         override suspend fun startExam(
@@ -88,6 +106,7 @@ class ExamViewModelTest {
             questions: List<Question>,
             startedAtEpochMillis: Long,
         ): Long {
+            startedConfig = config
             snapshots += questions.mapIndexed { index, question ->
                 ExamQuestionSnapshot(
                     questionId = question.id,
