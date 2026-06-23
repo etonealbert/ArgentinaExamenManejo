@@ -10,6 +10,7 @@ import com.etonealbert.examenmanejo.data.local.DriverFactory
 import com.etonealbert.examenmanejo.data.local.ExamLocalDataSource
 import com.etonealbert.examenmanejo.data.local.LicenseClassLocalDataSource
 import com.etonealbert.examenmanejo.data.local.QuestionLocalDataSource
+import com.etonealbert.examenmanejo.data.local.QuestionPackContentStore
 import com.etonealbert.examenmanejo.data.local.QuestionPackLocalDataSource
 import com.etonealbert.examenmanejo.data.local.SettingsLocalDataSource
 import com.etonealbert.examenmanejo.data.local.seed.SeedQuestionPackProvider
@@ -73,6 +74,7 @@ val appModule = module {
     single { LicenseClassLocalDataSource(get()) }
     single { QuestionLocalDataSource(get()) }
     single { QuestionPackLocalDataSource(get()) }
+    single<QuestionPackContentStore> { get<QuestionPackLocalDataSource>() }
     single { ExamLocalDataSource(get()) }
     single { SettingsLocalDataSource(get()) }
 

@@ -1,6 +1,6 @@
 package com.etonealbert.examenmanejo.data.repository
 
-import com.etonealbert.examenmanejo.data.local.QuestionPackLocalDataSource
+import com.etonealbert.examenmanejo.data.local.QuestionPackContentStore
 import com.etonealbert.examenmanejo.data.local.seed.SeedQuestionPackProvider
 import com.etonealbert.examenmanejo.domain.model.ImportResult
 import com.etonealbert.examenmanejo.domain.repository.QuestionPackRepository
@@ -8,7 +8,7 @@ import kotlin.time.Clock
 
 class QuestionPackRepositoryImpl(
     private val seedQuestionPackProvider: SeedQuestionPackProvider,
-    private val localDataSource: QuestionPackLocalDataSource,
+    private val localDataSource: QuestionPackContentStore,
     private val nowEpochMillis: () -> Long = { Clock.System.now().toEpochMilliseconds() },
 ) : QuestionPackRepository {
     override suspend fun importBundledSeedIfNeeded(): ImportResult {

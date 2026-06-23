@@ -280,3 +280,134 @@ BUILD FAILED in 3s
 33 actionable tasks: 4 executed, 29 up-to-date
 Configuration cache entry reused.
 ```
+
+## Fix After Final Re-review
+
+### Files Changed
+
+- `shared/src/commonMain/kotlin/com/etonealbert/examenmanejo/data/local/QuestionPackLocalDataSource.kt`: added `QuestionPackContentStore` seam and kept `QuestionPackLocalDataSource` as the SQLDelight-backed implementation.
+- `shared/src/commonMain/kotlin/com/etonealbert/examenmanejo/data/repository/QuestionPackRepositoryImpl.kt`: depends on `QuestionPackContentStore`, preserving provider read/checksum/decode inside the repository `try` so provider exceptions convert to `ImportResult.Failed`.
+- `shared/src/commonTest/kotlin/com/etonealbert/examenmanejo/data/repository/QuestionPackRepositoryImplTest.kt`: added focused regression coverage for converting provider/resource failures to `ImportResult.Failed` without touching local storage.
+- No checksum resource change was needed in this pass: `argentina-class-b-demo-0001.sha256` already equals the actual JSON SHA-256 `F81CC64DEB2F4F485E9BC467FFB86FA1DC28E6002C9BAEF71FC6941777BD4C2C`.
+- No route ViewModel code change was needed in this pass: `App.kt` already uses `rememberRouteViewModelStoreOwner(route)` and clears its `ViewModelStore` on route disposal; no `koinViewModel` unique keys remain.
+- No docs change was needed in this pass: `docs/architecture-implemented.md`, `docs/implementation-status.md`, and `docs/mvp-vertical-slice.md` already document authoritative `.sha256` validation and startup error routing.
+
+### Commands Run And Results
+
+#### `./gradlew.bat :shared:compileCommonTestKotlinMetadata`
+
+Result: FAIL, task does not exist in this Gradle project.
+
+```text
+Cannot locate tasks that match ':shared:compileCommonTestKotlinMetadata' as task 'compileCommonTestKotlinMetadata' not found in project ':shared'.
+
+BUILD FAILED in 10s
+```
+
+#### `./gradlew.bat :shared:compileAndroidHostTest`
+
+Initial red result: FAIL for expected missing test seam after adding repository regression test first.
+
+```text
+e: QuestionPackRepositoryImplTest.kt:3:48 Unresolved reference 'QuestionPackContentStore'.
+e: QuestionPackRepositoryImplTest.kt:21:31 Argument type mismatch: actual type is 'QuestionPackRepositoryImplTest.FakeQuestionPackContentStore', but 'QuestionPackLocalDataSource' was expected.
+e: QuestionPackRepositoryImplTest.kt:31:50 Unresolved reference 'QuestionPackContentStore'.
+> Task :shared:compileAndroidHostTest FAILED
+
+BUILD FAILED in 9s
+```
+
+Post-fix result: PASS.
+
+```text
+BUILD SUCCESSFUL in 27s
+30 actionable tasks: 4 executed, 26 up-to-date
+Configuration cache entry reused.
+```
+
+#### `Get-FileHash -Algorithm SHA256 -LiteralPath "shared\src\commonMain\composeResources\files\question_packs\argentina-class-b-demo-0001.json"`
+
+Result: PASS.
+
+```text
+SHA256          F81CC64DEB2F4F485E9BC467FFB86FA1DC28E6002C9BAEF71FC6941777BD4C2C
+```
+
+#### `./gradlew.bat :shared:testAndroidHostTest`
+
+Result: FAIL, known `VS` host test runner blocker still present before tests execute.
+
+```text
+> Task :shared:testAndroidHostTest FAILED
+Error: Could not find or load main class VS
+Caused by: java.lang.ClassNotFoundException: VS
+
+* What went wrong:
+Execution failed for task ':shared:testAndroidHostTest'.
+> Test process encountered an unexpected problem.
+   > Process 'Gradle Test Executor 1' finished with non-zero exit value 1
+
+BUILD FAILED in 4s
+33 actionable tasks: 4 executed, 29 up-to-date
+Configuration cache entry reused.
+```
+
+#### Domain import checks
+
+Result: PASS, no forbidden domain imports found.
+
+```text
+grep pattern: ^import .*\.(data|db|network|feature|core\.di|android|ios|compose|sqldelight|ktor|koin)\b
+Result: No files found
+
+grep pattern: ^import .*com\.etonealbert\.examenmanejo\.data
+Result: No files found
+```
+
+#### `./gradlew.bat :shared:compileAndroidHostTest :shared:compileKotlinMetadata :androidApp:assembleDebug`
+
+Result: PASS.
+
+```text
+BUILD SUCCESSFUL in 7s
+69 actionable tasks: 5 executed, 1 from cache, 63 up-to-date
+Configuration cache entry reused.
+```
+
+#### `./gradlew.bat :shared:compileKotlinMetadata`
+
+Result: PASS; Gradle marked the task skipped in this cached graph.
+
+```text
+> Task :shared:compileKotlinMetadata SKIPPED
+
+BUILD SUCCESSFUL in 855ms
+7 actionable tasks: 1 executed, 6 up-to-date
+Configuration cache entry reused.
+```
+
+## Fix After DI Re-review
+
+Final re-review found `QuestionPackContentStore` was required by `QuestionPackRepositoryImpl` but not bound in Koin.
+
+Files changed:
+
+- `shared/src/commonMain/kotlin/com/etonealbert/examenmanejo/core/di/AppModules.kt`
+
+Change:
+
+- Added `single<QuestionPackContentStore> { get<QuestionPackLocalDataSource>() }` so Koin resolves the repository dependency through the data-source interface.
+
+Command:
+
+```powershell
+.\gradlew.bat :shared:compileAndroidHostTest :shared:compileKotlinMetadata :androidApp:assembleDebug
+```
+
+Result:
+
+```text
+BUILD SUCCESSFUL in 21s
+69 actionable tasks: 6 executed, 63 up-to-date
+Configuration cache entry reused.
+```

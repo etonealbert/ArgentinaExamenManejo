@@ -4,15 +4,37 @@ import com.etonealbert.examenmanejo.data.mapper.toDatabaseLong
 import com.etonealbert.examenmanejo.data.local.seed.QuestionPackDto
 import com.etonealbert.examenmanejo.db.ExamenManejoDatabase
 
+interface QuestionPackContentStore {
+    fun selectQuestionPackHash(packId: String, version: Int): String?
+
+    fun insertImportLog(
+        importLogId: String,
+        packId: String,
+        version: Int,
+        startedAtEpochMillis: Long,
+        status: String,
+        message: String,
+    )
+
+    fun finishImportLog(
+        importLogId: String,
+        finishedAtEpochMillis: Long,
+        status: String,
+        message: String,
+    )
+
+    fun importContent(pack: QuestionPackDto, installedAtEpochMillis: Long): Int
+}
+
 class QuestionPackLocalDataSource(
     private val database: ExamenManejoDatabase,
-) {
-    fun selectQuestionPackHash(packId: String, version: Int): String? = database.contentQueries
+) : QuestionPackContentStore {
+    override fun selectQuestionPackHash(packId: String, version: Int): String? = database.contentQueries
         .selectQuestionPack(packId, version.toLong())
         .executeAsOneOrNull()
         ?.hash
 
-    fun insertImportLog(
+    override fun insertImportLog(
         importLogId: String,
         packId: String,
         version: Int,
@@ -31,7 +53,7 @@ class QuestionPackLocalDataSource(
         )
     }
 
-    fun finishImportLog(
+    override fun finishImportLog(
         importLogId: String,
         finishedAtEpochMillis: Long,
         status: String,
@@ -45,7 +67,7 @@ class QuestionPackLocalDataSource(
         )
     }
 
-    fun importContent(pack: QuestionPackDto, installedAtEpochMillis: Long): Int {
+    override fun importContent(pack: QuestionPackDto, installedAtEpochMillis: Long): Int {
         database.transaction {
             pack.sources.forEach { source ->
                 database.contentQueries.upsertContentSource(
